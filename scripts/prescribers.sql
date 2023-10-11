@@ -24,16 +24,27 @@ ORDER BY total_claim_count DESC;
 2. 
 --     a. Which specialty had the most total number of claims (totaled over all drugs)?
 	
-SELECT speciality_description, total_claim_count
-FROM prescriber
-LEFT JOIN prescription;
+SELECT specialty_description, total_claim_count
+FROM prescriber p1
+LEFT JOIN prescription p2
+ON p1.npi = p2.npi
+WHERE total_claim_count IS NOT NULL
+ORDER BY total_claim_count DESC;
+
+-- Answer: Family Practice
 
 --     b. Which specialty had the most total number of claims for opioids?
 	
-SELECT speciality_description, total_claim_count
-FROM prescriber
-LEFT JOIN prescription
+SELECT specialty_description, opioid_drug_flag, total_claim_count
+FROM prescription p2
+LEFT JOIN prescriber p1
+ON p1.npi = p2.npi
+LEFT JOIN drug d
+ON p2.drug_name = d.drug_name
+WHERE total_claim_count IS NOT NULL AND opioid_drug_flag = 'Y'
+ORDER BY total_claim_count DESC;
 
+-- Answer: Family Practice
 
 --     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
 
