@@ -24,27 +24,28 @@ ORDER BY total_claim_count DESC;
 2. 
 --     a. Which specialty had the most total number of claims (totaled over all drugs)?
 	
-SELECT specialty_description, total_claim_count
+SELECT specialty_description, COUNT (total_claim_count)
 FROM prescriber p1
 LEFT JOIN prescription p2
 ON p1.npi = p2.npi
-WHERE total_claim_count IS NOT NULL
-ORDER BY total_claim_count DESC;
+GROUP BY specialty_description
+ORDER BY COUNT (total_claim_count) DESC;
 
--- Answer: Family Practice
+-- Answer: Nurse Practitioner
 
 --     b. Which specialty had the most total number of claims for opioids?
 	
-SELECT specialty_description, opioid_drug_flag, total_claim_count
+SELECT specialty_description, COUNT (total_claim_count)
 FROM prescription p2
 LEFT JOIN prescriber p1
 ON p1.npi = p2.npi
 LEFT JOIN drug d
 ON p2.drug_name = d.drug_name
-WHERE total_claim_count IS NOT NULL AND opioid_drug_flag = 'Y'
-ORDER BY total_claim_count DESC;
+WHERE opioid_drug_flag = 'Y'
+GROUP BY specialty_description
+ORDER BY COUNT (total_claim_count) DESC;
 
--- Answer: Family Practice
+-- Answer: Nurse Practitioner 
 
 --     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
 
@@ -53,10 +54,26 @@ ORDER BY total_claim_count DESC;
 -- 3. 
 --     a. Which drug (generic_name) had the highest total drug cost?
 
+SELECT drug_name, generic_name, total_drug_cost
+FROM prescription p
+LEFT JOIN drug d
+USING (drug_name)
+ORDER BY total_drug_cost DESC;
+
+-- Answer: PIRFENIDONE
+
 --     b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.**
+
+SELECT drug_name, generic_name, total_day_supply, total_30_day_fill_count, total_drug_cost
+FROM prescription p
+LEFT JOIN drug d
+USING (drug_name)
+ORDER BY total_drug_cost DESC;
 
 -- 4. 
 --     a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
+
+SELECT drug_name, 
 
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
 
