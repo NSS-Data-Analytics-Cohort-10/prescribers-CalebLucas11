@@ -9,7 +9,7 @@ WHERE total_claim_count IS NOT NULL
 GROUP BY npi
 ORDER BY total_claims DESC;
 
--- Answer: 1881634483
+-- Answer: 1881634483, 99707
     
 --     b. Repeat the above, but this time report the nppes_provider_first_name, nppes_provider_last_org_name,  specialty_description, and the total number of claims.
 	
@@ -21,21 +21,23 @@ WHERE total_claim_count IS NOT NULL
 GROUP BY specialty_description, nppes_provider_last_org_name, nppes_provider_first_name
 ORDER BY total_claims DESC;
 
+--Answer: Bruce Pendley, Fmaily Practice, 99707
+
 2. 
 --     a. Which specialty had the most total number of claims (totaled over all drugs)?
 	
-SELECT specialty_description, COUNT (total_claim_count)
+SELECT specialty_description, SUM(total_claim_count)
 FROM prescriber p1
 LEFT JOIN prescription p2
 ON p1.npi = p2.npi
 GROUP BY specialty_description
 ORDER BY COUNT (total_claim_count) DESC;
 
--- Answer: Nurse Practitioner, 164609
+-- Answer: Nurse Practitioner, 7185315
 
 --     b. Which specialty had the most total number of claims for opioids?
 	
-SELECT specialty_description, COUNT (total_claim_count)
+SELECT specialty_description, SUM(total_claim_count)
 FROM prescription p2
 LEFT JOIN prescriber p1
 ON p1.npi = p2.npi
@@ -45,7 +47,7 @@ WHERE opioid_drug_flag = 'Y'
 GROUP BY specialty_description
 ORDER BY COUNT (total_claim_count) DESC;
 
--- Answer: Nurse Practitioner, 9551
+-- Answer: Nurse Practitioner, 900845
 
 --     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
 
@@ -55,12 +57,12 @@ ORDER BY COUNT (total_claim_count) DESC;
 --     a. Which drug (generic_name) had the highest total drug cost?
 
 SELECT drug_name, generic_name, total_drug_cost
-FROM prescription p
-LEFT JOIN drug d
+FROM prescription 
+LEFT JOIN drug 
 USING (drug_name)
 ORDER BY total_drug_cost DESC;
 
--- Answer: PIRFENIDONE
+-- Answer: PIRFENIDONE, $2,829,174.30
 
 --     b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.**
 
@@ -87,24 +89,24 @@ FROM drug;
 -- 5. 
 --     a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
 
-SELECT cbsa, cbsaname
+SELECT cbsaname
 FROM cbsa
-WHERE cbsaname LIKE '%TN'
+WHERE cbsaname LIKE '%TN%'
 GROUP BY cbsaname, cbsa;
 
--- Answer: 6
+-- Answer: 10
 
 --     b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
 
-SELECT DISTINCT (cbsaname), SUM(population)
+SELECT cbsaname, SUM(population) 
 FROM cbsa
-LEFT JOIN population
+INNER JOIN population
 USING (fipscounty)
 WHERE population IS NOT NULL
 GROUP BY cbsaname
-ORDER BY population DESC;
+ORDER BY SUM(population) DESC;
 
---Answer: 
+--Answer: Largest: Nashville-Davidson-Murfreesboro-Franklin, TN, 1,830,410. Smallest: Morristown, TN, 116,352.
 
 --     c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
 
