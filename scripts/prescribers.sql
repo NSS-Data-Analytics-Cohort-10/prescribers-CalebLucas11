@@ -75,13 +75,10 @@ ORDER BY total_drug_cost DESC;
 -- 4. 
 --     a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
 
-SELECT drug_name, opioid_drug_flag, antibiotic_drug_flag
+SELECT drug_name,
 CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid'
-	WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
-	ELSE 'neither' END AS drug_type
-FROM drug;
-
-SELECT *
+WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+ELSE 'neither' END AS drug_type
 FROM drug;
 
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
@@ -110,34 +107,39 @@ ORDER BY SUM(population) DESC;
 
 --     c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
 
-SELECT *
-FROM cbsa
-LEFT JOIN population
-USING (fipscounty);
+SELECT c1.cbsaname, f1.county, SUM(p1.population) AS total_population
+FROM cbsa AS c1
+FULL JOIN population AS p1
+USING (fipscounty)
+FULL JOIN fips_county AS f1
+USING (fipscounty)
+WHERE c1.cbsa IS NULL 
+	AND population IS NOT NULL
+GROUP BY c1.cbsaname, f1.county
+ORDER BY SUM(p1.population) DESC;
 
---Answer:
+--Answer: Sevier, 95,523.
 
 -- 6. 
 --     a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
 
-SELECT drug_name, total_claim_count
+SELECT drug_name, SUM(total_claim_count) AS total_claims
 FROM prescription
-LEFT JOIN drug
-USING (drug_name)
-WHERE total_claim_count >= 3000;
-
+WHERE total_claim_count >= 3000
+GROUP BY drug_name;
 
 --     b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
 
-SELECT drug_name, total_claim_count, opioid_drug_flag
+SELECT drug_name, SUM(total_claim_count) AS total_claims
 FROM prescription
 LEFT JOIN drug
 USING (drug_name)
-WHERE total_claim_count >= 3000 AND opioid_drug_flag = 'Y';
+WHERE total_claim_count >= 3000 AND opioid_drug_flag = 'Y'
+GROUP BY drug_name;
 
 --     c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
 
-SELECT drug_name, total_claim_count, opioid_drug_flag, nppes_provider_first_name, nppes_provider_last_org_name
+SELECT drug_name, total_claim_count, CONCAT(nppes_provider_first_name,' ', nppes_provider_last_org_name)
 FROM prescription
 LEFT JOIN drug
 USING (drug_name)
