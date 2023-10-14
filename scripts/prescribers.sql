@@ -177,25 +177,45 @@ WHERE total_claim_count>=3000;
 -- 7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
 
 --     a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). **Warning:** Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
-
-SELECT npi, drug_name, specialty_description,drug_name, nppes_provider_city
-FROM prescription
+	
+SELECT prescriber.nppes_provider_last_org_name, prescriber.nppes_provider_first_name,npi,drug_name
+FROM prescriber
+LEFT JOIN prescription
+USING (npi)
 LEFT JOIN drug
 USING (drug_name)
-LEFT JOIN prescriber
-USING (npi)
-WHERE specialty_description IN ('Pain Management')
-	AND nppes_provider_city ILIKE 'Nashville';
+WHERE specialty_description iLIKE '%Pain Management%'
+AND nppes_provider_city iLIKE '%Nashville%'
+AND opioid_drug_flag = 'Y'
+	
 
 --     b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
 
-SELECT npi, drug_name, specialty_description,drug_name, nppes_provider_city
-FROM prescription
+SELECT 
+    p.nppes_provider_last_org_name, p.nppes_provider_first_name, p.npi, d.drug_name, pr.total_claim_count
+FROM 
+    prescriber p
+FULL JOIN
+    prescription pr ON p.npi = pr.npi
+FULL JOIN
+    drug d ON pr.drug_name = d.drug_name
+WHERE 
+    p.specialty_description ILIKE '%Pain Management%'
+    AND p.nppes_provider_city ILIKE '%Nashville%'
+    AND d.opioid_drug_flag = 'Y';
+	
+
+    
+--     c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+
+SELECT prescriber.nppes_provider_last_org_name, prescriber.nppes_provider_first_name,npi,drug_name
+FROM prescriber
+LEFT JOIN prescription
+USING (npi)
 LEFT JOIN drug
 USING (drug_name)
-LEFT JOIN prescriber
-USING (npi)
-WHERE specialty_description IN ('Pain Management')
-	AND nppes_provider_city ILIKE 'Nashville';
-    
---     c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.																		   
+WHERE specialty_description iLIKE '%Pain Management%'
+AND nppes_provider_city iLIKE '%Nashville%'
+AND opioid_drug_flag = 'Y'
+
+
