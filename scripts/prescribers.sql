@@ -122,7 +122,7 @@ ORDER BY SUM(population) DESC;
 
 --     c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
 
-SELECT c1.cbsaname, f1.county, SUM(p1.population) AS total_population
+SELECT c1.cbsaname, f1.county, SUM(p1.population)AS total_population
 FROM cbsa AS c1
 FULL JOIN population AS p1
 USING (fipscounty)
@@ -138,29 +138,41 @@ ORDER BY SUM(p1.population) DESC;
 -- 6. 
 --     a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
 
-SELECT drug_name, SUM(total_claim_count) AS total_claims
-FROM prescription
-WHERE total_claim_count >= 3000
-GROUP BY drug_name;
+SELECT
+p.drug_name,
+p.total_claim_count
+FROM prescription AS p
+LEFT JOIN drug AS d
+USING(drug_name)
+WHERE total_claim_count > 3000;
 
 --     b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
 
-SELECT drug_name, SUM(total_claim_count) AS total_claims
-FROM prescription
-LEFT JOIN drug
-USING (drug_name)
-WHERE total_claim_count >= 3000 AND opioid_drug_flag = 'Y'
-GROUP BY drug_name;
+SELECT
+p.drug_name,
+CASE
+WHEN d.opioid_drug_flag = 'Y' THEN 'opioid'
+END AS drug_type,
+p.total_claim_count
+FROM prescription AS p
+LEFT JOIN drug AS d
+USING(drug_name)
+WHERE total_claim_count > 3000;
 
 --     c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
 
-SELECT drug_name, total_claim_count, CONCAT(nppes_provider_first_name,' ', nppes_provider_last_org_name)
+SELECT prescription.drug_name, total_claim_count, nppes_provider_last_org_name, nppes_provider_first_name,
+CASE
+	WHEN opioid_drug_flag = 'Y'
+	THEN 'Y'
+	ELSE 'N'
+END AS opioid
 FROM prescription
 LEFT JOIN drug
 USING (drug_name)
 LEFT JOIN prescriber
 USING (npi)
-WHERE total_claim_count >= 3000 AND opioid_drug_flag = 'Y';
+WHERE total_claim_count>=3000;
 
 -- 7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
 
